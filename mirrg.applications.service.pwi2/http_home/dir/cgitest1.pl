@@ -1,0 +1,1 @@
+print "content-type: text/html\n\n<h1>Test</h1>";
