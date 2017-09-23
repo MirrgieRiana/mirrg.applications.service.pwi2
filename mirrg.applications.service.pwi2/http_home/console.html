@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html, body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: monospace;
+	font-size: 14px;
+}
+
+table.layout {
+	height: 100%;
+	width: 100%;
+	border-collapse: collapse;
+}
+
+iframe.layout {
+	min-height: 20px;
+	height: 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
+
+input[type=text], textarea, button {
+	font-family: monospace;
+	font-size: 14px;
+	margin: 0;
+}
+
+textarea {
+	vertical-align: bottom;
+	height: 1.5em;
+	box-sizing: border-box;
+}
+
+button {
+	height: 1.5em;
+	box-sizing: border-box;
+}
+</style>
+<script src="moment.js"></script>
+<script src="jquery-3.2.1.min.js"></script>
+<script>
+	var $iframeContent;
+	var socket;
+
+	function addMessage($tr) {
+		var $html = $iframeContent.find("html");
+		var $body = $iframeContent.find("body");
+		var scrollable = $("#checkboxAutoScroll").is(':checked')
+				&& $body[0].scrollTop >= $html[0].scrollHeight
+						- $html[0].clientHeight - 20;
+
+		$iframeContent.find("#table").append($tr);
+
+		if (scrollable) {
+			$body[0].scrollTop = $html[0].scrollHeight - $html[0].clientHeight;
+		}
+	}
+	function addPWI2Message(data) {
+		var $tr = $("<tr>");
+		var $td;
+
+		$td = $("<td>");
+		$td.text(data.index);
+		$td.addClass("index");
+		$tr.append($td);
+
+		$td = $("<td>");
+		$td.text(data.message.time);
+		$td.addClass("time");
+		$tr.append($td);
+
+		{
+			$td = $("<td>");
+			$td.addClass("source");
+			$td.css("color", data.message.source.color);
+			var $span;
+
+			$span = $("<span>");
+			$span.text(data.message.source.name);
+			$span.addClass("source_name");
+			$span.attr("title", data.message.source.additional);
+			$td.append($span);
+
+			if (data.message.position != null) {
+				$td.append("(");
+
+				$span = $("<span>");
+				$span.text(data.message.position);
+				$span.addClass("source_position");
+				$td.append($span);
+
+				$td.append(")");
+			}
+
+			$tr.append($td);
+		}
+
+		$td = $("<td>");
+		$td.text(data.message.text);
+		$td.addClass("text");
+		$td.css("color", data.message.source.color);
+		$tr.append($td);
+
+		addMessage($tr);
+	}
+	function setStatus(string, color) {
+		{
+			var $tr = $("<tr>");
+			var $td;
+
+			$td = $("<td>");
+			$td.text(string);
+			$td.addClass("status");
+			$td.css("color", color);
+			$td.attr("colspan", "5");
+			$tr.append($td);
+
+			addMessage($tr);
+		}
+
+		$("#status").text(string);
+		$("#status").css("color", color);
+	}
+	function send(text) {
+		socket.send("Post " + JSON.stringify({
+			name : $("#textName").val(),
+			text : text,
+		}))
+	}
+
+	$(function() {
+
+		$.ajax({
+			type : "GET",
+			url : "/__api/get/basicAuthenticationName",
+			success : function(message) {
+				if (message) {
+					$("#textName").val(message);
+				}
+			},
+			error : function(XMLHttpRequest, textStatus, errorThrown) {
+				console.log(textStatus);
+
+			}
+		});
+
+		$("#iframeTable").attr("src", "console_table.html");
+		$("#iframeTable")[0].onload = (function() {
+
+			$iframeContent = $("#iframeTable").contents();
+
+			$
+					.ajax({
+						type : "GET",
+						url : "/__api/get/portWebSocket",
+						success : function(message) {
+							socket = new WebSocket("ws://" + location.hostname
+									+ ":" + message + "/view");
+							socket.onerror = function(error) {
+								setStatus("Connection error", "#ff0000");
+								console.log('ERROR:' + error);
+								socket = null;
+							};
+							socket.onopen = function(event) {
+								setStatus("Connection opened", "#0088ff");
+							};
+							socket.onclose = function(event) {
+								setStatus("Connection closed", "#ff8800");
+								socket = null;
+							};
+							socket.onmessage = function(event) {
+								if (event.data.startsWith("Message ")) {
+									if ($("#checkboxReceiveMessage").is(
+											':checked')) {
+										addPWI2Message(JSON.parse(event.data
+												.substr(8)));
+									} else {
+
+									}
+								}
+							};
+						},
+						error : function(XMLHttpRequest, textStatus,
+								errorThrown) {
+							setStatus("Connection error", "#ff0000");
+							console.log('ERROR:' + textStatus + "/"
+									+ errorThrown);
+						}
+					});
+
+		});
+
+	});
+</script>
+</head>
+<body>
+	<table class="layout">
+		<tr style="height: 100%;">
+			<td><iframe class="layout" id="iframeTable"></iframe></td>
+		</tr>
+		<tr>
+			<td><span style="vertical-align: bottom;"><input type="text" id="textName" style="width: 5em;" value="Guest"> <textarea id="textareaInput" style="width: 300px;"></textarea>
+					<button onclick='
+						var text = $("#textareaInput").val();
+						if (text != "") {
+							send(text);
+						}
+					'>Send</button> <label><input type="checkbox"
+						id="checkboxReceiveMessage" checked>Receive Message</label><label><input type="checkbox" id="checkboxAutoScroll" checked>Auto Scroll</label></span></td>
+		</tr>
+		<tr>
+			<td>
+				<table class="layout">
+					<tr>
+						<td id="status"></td>
+						<td id="applicationName" style="text-align: right;">mirrg.applications.service.pwi2 Browser:Firefox55,GoogleChrome60</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
+</body>
+</html>

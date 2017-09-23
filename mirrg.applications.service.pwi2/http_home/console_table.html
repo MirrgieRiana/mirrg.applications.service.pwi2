@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+	margin: 0;
+	overflow-y: scroll;
+	font-family: monospace;
+	font-size: 12px;
+}
+
+table.table {
+	color: #444;
+	border-collapse: collapse;
+}
+
+table.table td {
+	vertical-align: top;
+}
+
+.status {
+	font-weight: bold;
+}
+
+.index {
+	text-align: right;
+}
+
+.time {
+	color: #888;
+	text-align: center;
+}
+
+.source {
+
+}
+
+.source_name {
+	font-weight: bold;
+}
+
+.text {
+	word-break: break-all;
+}
+</style>
+</head>
+<body>
+	<table class="table">
+		<thead>
+			<tr>
+				<th style="width: 3em;">Index</th>
+				<th style="width: 12em;">Time</th>
+				<th style="width: 10em;">Source</th>
+				<th style="min-width: 20em;">Text</th>
+			</tr>
+		</thead>
+		<tbody id="table">
+		</tbody>
+	</table>
+</body>
+</html>
