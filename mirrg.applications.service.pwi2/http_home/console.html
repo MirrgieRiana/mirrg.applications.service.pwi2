@@ -45,23 +45,35 @@ button {
 <script src="moment.js"></script>
 <script src="jquery-3.2.1.min.js"></script>
 <script>
+	var config = {
+		tableQueueSize : 2000
+	};
+
 	var $iframeContent;
 	var socket;
 
-	function addMessage($tr) {
+	function doScroll(code) {
 		var $html = $iframeContent.find("html");
 		var $body = $iframeContent.find("body");
-		var scrollable = $("#checkboxAutoScroll").is(':checked')
-				&& $body[0].scrollTop >= $html[0].scrollHeight
-						- $html[0].clientHeight - 20;
 
-		$iframeContent.find("#table").append($tr);
+		var scrollable = $("#checkboxAutoScroll").is(':checked') && $html[0].scrollTop >= $html[0].scrollHeight - $html[0].clientHeight - 20;
+
+		code();
 
 		if (scrollable) {
-			$body[0].scrollTop = $html[0].scrollHeight - $html[0].clientHeight;
+			$html[0].scrollTop = $html[0].scrollHeight - $html[0].clientHeight;
 		}
+
 	}
-	function addPWI2Message(data) {
+	function addMessage($tr, scrollable) {
+		var table = $iframeContent.find("#table")[0];
+		while (table.childElementCount >= config.tableQueueSize) {
+			table.removeChild(table.firstChild);
+		}
+
+		$iframeContent.find("#table").append($tr);
+	}
+	function addPWI2Message(data, scrollable) {
 		var $tr = $("<tr>");
 		var $td;
 
@@ -109,7 +121,7 @@ button {
 
 		addMessage($tr);
 	}
-	function setStatus(string, color) {
+	function setStatus(string, color, scrollable) {
 		{
 			var $tr = $("<tr>");
 			var $td;
@@ -155,44 +167,95 @@ button {
 
 			$iframeContent = $("#iframeTable").contents();
 
-			$
-					.ajax({
-						type : "GET",
-						url : "/__api/get/portWebSocket",
-						success : function(message) {
-							socket = new WebSocket("ws://" + location.hostname
-									+ ":" + message + "/view");
-							socket.onerror = function(error) {
-								setStatus("Connection error", "#ff0000");
-								console.log('ERROR:' + error);
-								socket = null;
-							};
-							socket.onopen = function(event) {
-								setStatus("Connection opened", "#0088ff");
-							};
-							socket.onclose = function(event) {
-								setStatus("Connection closed", "#ff8800");
-								socket = null;
-							};
-							socket.onmessage = function(event) {
-								if (event.data.startsWith("Message ")) {
-									if ($("#checkboxReceiveMessage").is(
-											':checked')) {
-										addPWI2Message(JSON.parse(event.data
-												.substr(8)));
-									} else {
-
-									}
-								}
-							};
-						},
-						error : function(XMLHttpRequest, textStatus,
-								errorThrown) {
+			$.ajax({
+				type : "GET",
+				url : "/__api/get/portWebSocket",
+				success : function(message) {
+					socket = new WebSocket("ws://" + location.hostname + ":" + message + "/view");
+					socket.onerror = function(error) {
+						doScroll(function() {
 							setStatus("Connection error", "#ff0000");
-							console.log('ERROR:' + textStatus + "/"
-									+ errorThrown);
+						});
+						console.log('ERROR:' + error);
+						socket = null;
+					};
+					socket.onopen = function(event) {
+						doScroll(function() {
+							setStatus("Connection opened", "#0088ff");
+						});
+					};
+					socket.onclose = function(event) {
+						doScroll(function() {
+							setStatus("Connection closed", "#ff8800");
+						});
+						socket = null;
+					};
+					socket.onmessage = function(event) {
+						var packets = [];
+
+						var string = event.data;
+						while (true) {
+							var index = string.indexOf(":");
+							if (index == -1) {
+								break;
+							}
+							var length = parseInt(string.substr(0, index), 10);
+							packets.push(string.substr(index + 1, length));
+							string = string.substr(index + 1 + length);
 						}
+
+						var groups = [];
+						while (packets.length >= 100) {
+							groups.push(packets.splice(0, 100));
+						}
+						if (packets.length > 0) {
+							groups.push(packets);
+						}
+
+						var codes = [];
+						for ( var i in groups) {
+							codes.push((function() {
+								var packets = groups[i];
+								return function() {
+									doScroll(function() {
+										for ( var i in packets) {
+											var packet = packets[i];
+											if ($("#checkboxReceiveMessage").is(':checked')) {
+
+												if (packet.startsWith("MessageAdded ")) {
+													addPWI2Message(JSON.parse(packet.substr(13)));
+												} else if (packet.startsWith("MessageSkipped ")) {
+													setStatus("Skipped " + JSON.parse(packet.substr(15)) + " messages!!", "#ff0000");
+												}
+
+											}
+										}
+									});
+								};
+							})());
+						}
+
+						for ( var i in codes) {
+							setTimeout(codes[i], 0);
+						}
+
+					};
+				},
+				error : function(XMLHttpRequest, textStatus, errorThrown) {
+					doScroll(function() {
+						setStatus("Connection error", "#ff0000");
 					});
+					console.log('ERROR:' + textStatus + "/" + errorThrown);
+				}
+			});
+
+			$.ajax({
+				type : "GET",
+				url : "/__api/get/basicAuthenticationName",
+				success : function(message) {
+					$("#textName").val(message);
+				},
+			});
 
 		});
 
@@ -219,7 +282,7 @@ button {
 				<table class="layout">
 					<tr>
 						<td id="status"></td>
-						<td id="applicationName" style="text-align: right;">mirrg.applications.service.pwi2 Browser:Firefox55,GoogleChrome60</td>
+						<td id="applicationName" style="text-align: right;">mirrg.applications.service.pwi2 for Firefox55,GoogleChrome60</td>
 					</tr>
 				</table>
 			</td>
