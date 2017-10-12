@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import mirrg.applications.service.pwi2.core.IAcceptorTransformer;
 
 /**
- * {@link #accept()} メソッドがブロッキングを取り除くための制御を全く行わないことを表します。
+ * {@link #accept(Object)} メソッドがブロッキングを取り除くための制御を全く行わないことを表します。
  */
 public interface IAcceptorBlocking<T>
 {

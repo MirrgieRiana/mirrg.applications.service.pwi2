@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import mirrg.applications.service.pwi2.core.IAcceptorTransformer;
 
 /**
- * {@link #accept()} メソッドがブロッキングを決して行わないことを表します。
+ * {@link #accept(Object)} メソッドがブロッキングを決して行わないことを表します。
  */
 public interface IAcceptorNonBlocking<T>
 {

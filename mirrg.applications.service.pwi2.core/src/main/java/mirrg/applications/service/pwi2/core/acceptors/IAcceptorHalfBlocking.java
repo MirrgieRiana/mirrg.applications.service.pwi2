@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 import mirrg.applications.service.pwi2.core.IAcceptorTransformer;
 
 /**
- * {@link #accept()} メソッドが一定の速度に達するまではブロッキングを行わないことを表します。
+ * {@link #accept(Object)} メソッドが一定の速度に達するまではブロッキングを行わないことを表します。
  */
 public interface IAcceptorHalfBlocking<T>
 {
