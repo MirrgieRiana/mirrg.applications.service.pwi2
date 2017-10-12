@@ -1,4 +1,4 @@
-package mirrg.applications.service.pwi2;
+package mirrg.applications.service.pwi2.plugins.web;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -12,25 +12,25 @@ import mirrg.lithium.cgi.HTTPResponse;
 import mirrg.lithium.cgi.routing.CGIRouter;
 import mirrg.lithium.cgi.routing.HttpHandlerCGIRouting;
 
-public class PWI2HttpServer
+public class HttpServerPluginWeb
 {
 
 	@SuppressWarnings("unused")
-	private PWI2 pwi2;
-
+	private PluginWeb plugin;
 	public final HttpServer server;
 	public final HttpContext contextMain;
 
 	private ArrayList<HttpContext> contexts = new ArrayList<>();
 
-	public PWI2HttpServer(PWI2 pwi2, InetSocketAddress address, CGIRouter[] cgiRouters) throws IOException
+	public HttpServerPluginWeb(PluginWeb plugin) throws IOException
 	{
-		this.pwi2 = pwi2;
-		this.server = HttpServer.create(address, 10);
-		this.contextMain = server.createContext("/", new HttpHandlerCGIRouting(cgiRouters));
+		this.plugin = plugin;
+		this.server = HttpServer.create(new InetSocketAddress(plugin.hostname, plugin.portHttp), 10);
+		this.contextMain = server.createContext("/", new HttpHandlerCGIRouting(plugin.cgiRouters.toArray(CGIRouter[]::new)));
+
 		contexts.add(contextMain);
 		contexts.add(server.createContext("/__api/get/portWebSocket",
-			e -> HTTPResponse.send(e, 200, "" + pwi2.portWebSocket)));
+			e -> HTTPResponse.send(e, 200, "" + plugin.portWebSocket)));
 		contexts.add(server.createContext("/__api/get/basicAuthenticationName",
 			e -> HTTPResponse.send(e, 200, "" + (e.getPrincipal() == null ? "" : e.getPrincipal().getUsername()))));
 	}
