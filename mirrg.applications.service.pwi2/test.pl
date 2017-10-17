@@ -4,19 +4,19 @@ map {
 } 1..100;
 
 local $SIG{HUP} = sub {
-	print "HUP!";
+	print "HUP!", "\n";
 	sleep(5);
 	exit(0);
 };
 
 local $SIG{TERM} = sub {
-	print "TERM!";
+	print "TERM!", "\n";
 	sleep(5);
 	exit(0);
 };
 
 local $SIG{INT} = sub {
-	print "INT!";
+	print "INT!", "\n";
 	sleep(5);
 	exit(0);
 };

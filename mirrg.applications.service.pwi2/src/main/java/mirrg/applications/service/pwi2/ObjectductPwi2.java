@@ -168,6 +168,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 					PluginProcess.LOG.warn(() -> "Process is already running!");
 					return;
 				}
+				PluginWeb.LOG.info(() -> "Start process (" + connection.getRemoteSocketAddress() + ")");
 				pluginProcess.up();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -178,12 +179,15 @@ public abstract class ObjectductPwi2 extends Objectduct
 				PluginProcess.LOG.warn(() -> "No process is running!");
 				return;
 			}
+			PluginWeb.LOG.info(() -> "Stop process (" + connection.getRemoteSocketAddress() + ")");
 			pluginProcess.down();
 		});
 		pluginWeb.registerWebSocketCommandHandler("auto_restart", (connection, argument) -> {
 			if ("true".equals(argument)) {
+				PluginWeb.LOG.info(() -> "Set auto_restart (" + connection.getRemoteSocketAddress() + "): " + true);
 				autoRestarter.up();
 			} else if ("false".equals(argument)) {
+				PluginWeb.LOG.info(() -> "Set auto_restart (" + connection.getRemoteSocketAddress() + "): " + false);
 				autoRestarter.down();
 			} else {
 				PluginWeb.LOG.warn(() -> "Illegal argument: " + "auto_restart " + argument);
