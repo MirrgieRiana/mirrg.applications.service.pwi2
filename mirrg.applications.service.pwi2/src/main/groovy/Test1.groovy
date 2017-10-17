@@ -69,8 +69,12 @@ class ObjectductPwi2Test1 extends ObjectductPwi2 {
 	}
 }
 
-def objectduct = new ObjectductPwi2Test1()
-objectduct.init()
-objectduct.start()
-
-objectduct.pluginProcess.up()
+try {
+	def objectduct = new ObjectductPwi2Test1()
+	objectduct.autoRestarter.up()
+	objectduct.init()
+	objectduct.start()
+} catch (Exception e) {
+	e.printStackTrace()
+	System.exit(1)
+}

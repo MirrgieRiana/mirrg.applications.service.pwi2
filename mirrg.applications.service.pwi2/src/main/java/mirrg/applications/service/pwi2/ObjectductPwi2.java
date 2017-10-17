@@ -1,6 +1,7 @@
 package mirrg.applications.service.pwi2;
 
 import java.io.File;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Optional;
 import java.util.function.Function;
@@ -15,6 +16,7 @@ import com.sun.net.httpserver.BasicAuthenticator;
 
 import mirrg.applications.service.pwi2.core.Message;
 import mirrg.applications.service.pwi2.core.Source;
+import mirrg.applications.service.pwi2.core.inventories.ReaderImporter;
 import mirrg.applications.service.pwi2.core.plugins.process.PluginProcess;
 import mirrg.applications.service.pwi2.core.plugins.web.PluginWeb;
 import mirrg.lithium.cgi.routing.CGIRouter;
@@ -23,10 +25,48 @@ import mirrg.lithium.objectduct.TerminalClosedException;
 import mirrg.lithium.objectduct.inventories.BusedHopper;
 import mirrg.lithium.objectduct.inventories.Objectduct;
 import mirrg.lithium.objectduct.logging.AppenderObjectduct;
+import mirrg.lithium.objectduct.logging.LoggerLater;
 import mirrg.lithium.struct.ImmutableArray;
 
 public abstract class ObjectductPwi2 extends Objectduct
 {
+
+	public static final LoggerLater LOG = new LoggerLater(LogFactory.getLog(ObjectductPwi2.class));
+
+	public AutoRestarter autoRestarter = new AutoRestarter(new Runnable() {
+
+		@Override
+		public void run()
+		{
+			try {
+				if (!pluginProcess.isRunning()) pluginProcess.up();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+	});
+
+	{
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+
+			@Override
+			public void run()
+			{
+				try {
+					LOG.info(() -> "Stopping...");
+					autoRestarter.down();
+					stop();
+					join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+
+		}));
+	}
+
+	//
 
 	public abstract String getHostname();
 
@@ -47,6 +87,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 	//
 
 	public BusedHopper<Message> hopperInput;
+	public ReaderImporter readerImporter;
 	public PluginWeb pluginWeb;
 	public PluginProcess pluginProcess;
 	public BusedHopper<Message> hopperOutput;
@@ -55,6 +96,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 	protected void initInventories() throws Exception
 	{
 		add(hopperInput = new BusedHopper<>(100));
+		add(readerImporter = new ReaderImporter(new InputStreamReader(System.in)));
 		add(pluginWeb = new PluginWeb() {
 
 			@Override
@@ -122,13 +164,30 @@ public abstract class ObjectductPwi2 extends Objectduct
 		});
 		pluginWeb.registerWebSocketCommandHandler("start", (connection, argument) -> {
 			try {
+				if (pluginProcess.isRunning()) {
+					PluginProcess.LOG.warn(() -> "Process is already running!");
+					return;
+				}
 				pluginProcess.up();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		});
 		pluginWeb.registerWebSocketCommandHandler("stop", (connection, argument) -> {
+			if (!pluginProcess.isRunning()) {
+				PluginProcess.LOG.warn(() -> "No process is running!");
+				return;
+			}
 			pluginProcess.down();
+		});
+		pluginWeb.registerWebSocketCommandHandler("auto_restart", (connection, argument) -> {
+			if ("true".equals(argument)) {
+				autoRestarter.up();
+			} else if ("false".equals(argument)) {
+				autoRestarter.down();
+			} else {
+				PluginWeb.LOG.warn(() -> "Illegal argument: " + "auto_restart " + argument);
+			}
 		});
 
 		//
@@ -166,6 +225,8 @@ public abstract class ObjectductPwi2 extends Objectduct
 		hopperInput.getExportBus().addExporter(pluginProcess.getImporter()
 			.map(m -> m.text));
 		hopperInput.getExportBus().addExporter(hopperOutput.getImportBus().addImporter());
+		readerImporter.setExporter(hopperInput.getImportBus().addImporter()
+			.map(t -> new Message(new Source("STDIN", "#0000ff", ""), t.y, t.x)));
 		pluginWeb.setExporter(hopperInput.getImportBus().addImporter());
 		pluginProcess.setExporter(hopperOutput.getImportBus().addImporter());
 		hopperOutput.getExportBus().addExporter(pluginWeb.getImporter());

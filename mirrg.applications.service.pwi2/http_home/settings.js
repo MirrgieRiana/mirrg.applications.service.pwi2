@@ -6,10 +6,10 @@ $(function() {
 	$("#paneTools").append($('<button>').addClass("tool").text("Auto Restart Off").click(function() {
 		send("auto_restart false");
 	}));
-	$("#paneTools").append($('<button>').addClass("tool").text("Stop").click(function() {
-		send("stop");
-	}));
-	$("#paneTools").append($('<button>').addClass("tool").text("Start").click(function() {
+	$("#paneTools").append($('<button>').addClass("tool").text("Run Process").click(function() {
 		send("start");
+	}));
+	$("#paneTools").append($('<button>').addClass("tool").text("Kill Process").click(function() {
+		send("stop");
 	}));
 });
