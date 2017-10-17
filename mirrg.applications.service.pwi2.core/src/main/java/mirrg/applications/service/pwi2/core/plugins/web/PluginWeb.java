@@ -1,9 +1,9 @@
 package mirrg.applications.service.pwi2.core.plugins.web;
 
+import java.net.InetSocketAddress;
 import java.util.Hashtable;
 
 import org.apache.commons.logging.LogFactory;
-import org.java_websocket.WebSocket;
 
 import mirrg.applications.service.pwi2.core.Message;
 import mirrg.applications.service.pwi2.core.Source;
@@ -40,13 +40,13 @@ public abstract class PluginWeb extends Objectduct
 
 	public PluginWeb()
 	{
-		registerWebSocketCommandHandler("post", (connection, argument) -> {
+		registerWebCommandHandler("post", (remoteSocketAddress, command, argument) -> {
 			ReceivedData receivedData = JSON.decode(argument, ReceivedData.class);
 			Message message = new Message(
 				new Source(
 					"WEB(" + receivedData.name + ")",
 					"#008800",
-					connection.getRemoteSocketAddress().getHostString()),
+					remoteSocketAddress.getHostString()),
 				receivedData.text);
 			try {
 				exporter.accept(message);
@@ -106,24 +106,43 @@ public abstract class PluginWeb extends Objectduct
 
 	//
 
-	private Hashtable<String, IWebSocketCommandHandler> webSocketCommandHandlers = new Hashtable<>();
+	private Hashtable<String, IWebCommandHandler> webCommandHandlers = new Hashtable<>();
 
-	public void registerWebSocketCommandHandler(String command, IWebSocketCommandHandler webSocketCommandHandler)
+	public void registerWebCommandHandler(String command, IWebCommandHandler webCommandHandler)
 	{
 		command = command.toLowerCase();
-		if (webSocketCommandHandlers.containsKey(command)) {
+		if (webCommandHandlers.containsKey(command)) {
 			throw new IllegalArgumentException("Duplicated Name: " + command);
 		}
-		webSocketCommandHandlers.put(command, webSocketCommandHandler);
+		webCommandHandlers.put(command, webCommandHandler);
 	}
 
-	public void onWebSocketCommand(WebSocket connection, String command, String argument)
+	public void onWebCommand(InetSocketAddress remoteSocketAddress, String message)
+	{
+		int index = message.indexOf(' ');
+		if (index == -1) {
+			onWebCommand(remoteSocketAddress, message, null);
+		} else {
+			onWebCommand(remoteSocketAddress, message.substring(0, index), message.substring(index + 1));
+		}
+	}
+
+	public void onWebCommand(InetSocketAddress remoteSocketAddress, String command, String argument)
 	{
 		String command2 = command.toLowerCase();
-		if (webSocketCommandHandlers.containsKey(command2)) {
-			webSocketCommandHandlers.get(command2).accept(connection, argument);
+
+		LOG.info(() -> "WebCommand (" + remoteSocketAddress + "): " + command2);
+		LOG.debug(() -> "Argument: " + argument);
+
+		if (webCommandHandlers.containsKey(command2)) {
+			IWebCommandHandler webCommandHandler = webCommandHandlers.get(command2);
+			try {
+				webCommandHandler.accept(remoteSocketAddress, command, argument);
+			} catch (Exception e) {
+				LOG.error(() -> "Exception on WebCommand", () -> e);
+			}
 		} else {
-			LOG.warn(() -> "Unknown WebSocketCommand: " + command2);
+			LOG.warn(() -> "Unknown WebCommand: " + command2);
 		}
 	}
 

@@ -59,13 +59,17 @@ class ObjectductPwi2Test1 extends ObjectductPwi2 {
 	}
 
 	String[] getCommand() {
-		["perl", "test.pl"] as String[]
+		["perl", "test.pl", "" + sessionId] as String[]
 	}
 	File getCurrentDirectory() {
 		new File(".")
 	}
 	int getMaxLength() {
 		200
+	}
+
+	File getProcessCounterFile() {
+		new File("counter.txt")
 	}
 }
 

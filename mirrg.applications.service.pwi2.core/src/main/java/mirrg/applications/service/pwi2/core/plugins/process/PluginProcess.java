@@ -94,6 +94,8 @@ public abstract class PluginProcess extends Objectduct
 			LOG.info(() -> "Process Start: `" + String.join(" ", getCommand()) + "`");
 			LOG.info(() -> "Current Directory: '" + getCurrentDirectory() + "'");
 
+			getCurrentDirectory().mkdirs();
+
 			processSession = new ProcessSession(getCommand(), getCurrentDirectory(), getMaxLength());
 			processSession.init();
 			processSession.setExporter(new Terminal<Message>() {

@@ -33,6 +33,14 @@ public class HttpServerPluginWeb extends Objectduct
 			e -> HTTPResponse.send(e, 200, "" + plugin.getPortWebSocket())));
 		contexts.add(server.createContext("/__api/get/basicAuthenticationName",
 			e -> HTTPResponse.send(e, 200, "" + (e.getPrincipal() == null ? "" : e.getPrincipal().getUsername()))));
+		contexts.add(server.createContext("/__api/webCommand",
+			e -> {
+				String query = e.getRequestURI().getQuery();
+				if (query != null) {
+					plugin.onWebCommand(e.getRemoteAddress(), query);
+				}
+				HTTPResponse.send(e, 200, "");
+			}));
 	}
 
 	public void setAuthenticator(Authenticator authenticator)

@@ -39,7 +39,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 		public void run()
 		{
 			try {
-				if (!pluginProcess.isRunning()) pluginProcess.up();
+				if (!pluginProcess.isRunning()) up();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -66,6 +66,9 @@ public abstract class ObjectductPwi2 extends Objectduct
 		}));
 	}
 
+	public FileIncrementer fileIncrementer;
+	public int sessionId;
+
 	//
 
 	public abstract String getHostname();
@@ -83,6 +86,8 @@ public abstract class ObjectductPwi2 extends Objectduct
 	public abstract File getCurrentDirectory();
 
 	public abstract int getMaxLength();
+
+	public abstract File getProcessCounterFile();
 
 	//
 
@@ -151,6 +156,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 	@Override
 	protected void initConnections()
 	{
+		fileIncrementer = new FileIncrementer(getProcessCounterFile());
 		pluginWeb.getHttpServer().setAuthenticator(new BasicAuthenticator("WebInterface") {
 
 			@Override
@@ -162,32 +168,32 @@ public abstract class ObjectductPwi2 extends Objectduct
 			}
 
 		});
-		pluginWeb.registerWebSocketCommandHandler("start", (connection, argument) -> {
+		pluginWeb.registerWebCommandHandler("start", (remoteSocketAddress, command, argument) -> {
 			try {
 				if (pluginProcess.isRunning()) {
 					PluginProcess.LOG.warn(() -> "Process is already running!");
 					return;
 				}
-				PluginWeb.LOG.info(() -> "Start process (" + connection.getRemoteSocketAddress() + ")");
-				pluginProcess.up();
+				PluginWeb.LOG.info(() -> "Start process (" + remoteSocketAddress + ")");
+				up();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		});
-		pluginWeb.registerWebSocketCommandHandler("stop", (connection, argument) -> {
+		pluginWeb.registerWebCommandHandler("stop", (remoteSocketAddress, command, argument) -> {
 			if (!pluginProcess.isRunning()) {
 				PluginProcess.LOG.warn(() -> "No process is running!");
 				return;
 			}
-			PluginWeb.LOG.info(() -> "Stop process (" + connection.getRemoteSocketAddress() + ")");
+			PluginWeb.LOG.info(() -> "Stop process (" + remoteSocketAddress + ")");
 			pluginProcess.down();
 		});
-		pluginWeb.registerWebSocketCommandHandler("auto_restart", (connection, argument) -> {
+		pluginWeb.registerWebCommandHandler("auto_restart", (remoteSocketAddress, command, argument) -> {
 			if ("true".equals(argument)) {
-				PluginWeb.LOG.info(() -> "Set auto_restart (" + connection.getRemoteSocketAddress() + "): " + true);
+				PluginWeb.LOG.info(() -> "Set auto_restart (" + remoteSocketAddress + "): " + true);
 				autoRestarter.up();
 			} else if ("false".equals(argument)) {
-				PluginWeb.LOG.info(() -> "Set auto_restart (" + connection.getRemoteSocketAddress() + "): " + false);
+				PluginWeb.LOG.info(() -> "Set auto_restart (" + remoteSocketAddress + "): " + false);
 				autoRestarter.down();
 			} else {
 				PluginWeb.LOG.warn(() -> "Illegal argument: " + "auto_restart " + argument);
@@ -251,6 +257,12 @@ public abstract class ObjectductPwi2 extends Objectduct
 			}
 
 		});
+	}
+
+	public void up() throws Exception
+	{
+		sessionId = fileIncrementer.next();
+		pluginProcess.up();
 	}
 
 }

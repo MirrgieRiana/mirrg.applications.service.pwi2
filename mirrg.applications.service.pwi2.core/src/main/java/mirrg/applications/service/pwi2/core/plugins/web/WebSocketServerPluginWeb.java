@@ -65,12 +65,7 @@ public class WebSocketServerPluginWeb extends Objectduct
 			@Override
 			public void onMessage(WebSocket conn, String message)
 			{
-				int index = message.indexOf(' ');
-				if (index == -1) {
-					plugin.onWebSocketCommand(conn, message, null);
-				} else {
-					plugin.onWebSocketCommand(conn, message.substring(0, index), message.substring(index + 1));
-				}
+				plugin.onWebCommand(conn.getRemoteSocketAddress(), message);
 			}
 
 			@Override

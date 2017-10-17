@@ -1,8 +1,4 @@
 
-map {
-	print "Line\n";
-} 1..100;
-
 local $SIG{HUP} = sub {
 	print "HUP!", "\n";
 	sleep(5);
@@ -23,9 +19,14 @@ local $SIG{INT} = sub {
 
 $| = 1;
 
+map {
+	print "Line\n";
+} 1..100;
+
+print "Argument: " . join(" ", @ARGV), "\n";
 print "process started", "\n";
 
-while (<>) {
+while (<STDIN>) {
 	chomp $_;
 	if ($_ eq "stop") {
 		print "stopped", "\n";
