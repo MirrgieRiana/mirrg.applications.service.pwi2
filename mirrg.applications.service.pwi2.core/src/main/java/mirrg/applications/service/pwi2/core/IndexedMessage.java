@@ -1,4 +1,4 @@
-package mirrg.applications.service.pwi2.plugins;
+package mirrg.applications.service.pwi2.core;
 
 public class IndexedMessage
 {
