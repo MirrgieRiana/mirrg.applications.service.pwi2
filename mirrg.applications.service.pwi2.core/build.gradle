@@ -84,7 +84,7 @@ dependencies {
 	compile group: 'mirrg.lithium', name: 'mirrg.lithium.lang', version: '1.0+'
 	compile group: 'mirrg.lithium', name: 'mirrg.lithium.cgi', version: '3.0+'
 	compile group: 'mirrg.lithium', name: 'mirrg.lithium.event', version: '2.1+'
-	compile group: 'mirrg.lithium', name: 'mirrg.lithium.objectduct', version: '0.1+'
+	compile group: 'mirrg.lithium', name: 'mirrg.lithium.objectduct', version: '0.3+'
 }
 
 uploadArchives {

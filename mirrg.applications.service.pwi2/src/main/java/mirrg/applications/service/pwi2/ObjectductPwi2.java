@@ -16,7 +16,7 @@ import com.sun.net.httpserver.BasicAuthenticator;
 
 import mirrg.applications.service.pwi2.core.Message;
 import mirrg.applications.service.pwi2.core.Source;
-import mirrg.applications.service.pwi2.core.inventories.ReaderImporter;
+import mirrg.applications.service.pwi2.core.inventories.DaemonReaderHopper;
 import mirrg.applications.service.pwi2.core.plugins.process.PluginProcess;
 import mirrg.applications.service.pwi2.core.plugins.web.PluginWeb;
 import mirrg.lithium.cgi.routing.CGIRouter;
@@ -53,14 +53,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 			@Override
 			public void run()
 			{
-				try {
-					LOG.info(() -> "Stopping...");
-					autoRestarter.down();
-					stop();
-					join();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				exit();
 			}
 
 		}));
@@ -92,7 +85,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 	//
 
 	public BusedHopper<Message> hopperInput;
-	public ReaderImporter readerImporter;
+	public DaemonReaderHopper daemonReaderHopper;
 	public PluginWeb pluginWeb;
 	public PluginProcess pluginProcess;
 	public BusedHopper<Message> hopperOutput;
@@ -101,7 +94,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 	protected void initInventories() throws Exception
 	{
 		add(hopperInput = new BusedHopper<>(100));
-		add(readerImporter = new ReaderImporter(new InputStreamReader(System.in)));
+		add(daemonReaderHopper = new DaemonReaderHopper(new InputStreamReader(System.in)));
 		add(pluginWeb = new PluginWeb() {
 
 			@Override
@@ -168,13 +161,21 @@ public abstract class ObjectductPwi2 extends Objectduct
 			}
 
 		});
+		pluginWeb.registerWebCommandHandler("auto_restart", (remoteSocketAddress, command, argument) -> {
+			if ("true".equals(argument)) {
+				autoRestarter.up();
+			} else if ("false".equals(argument)) {
+				autoRestarter.down();
+			} else {
+				PluginWeb.LOG.warn(() -> "Illegal argument: " + "auto_restart " + argument);
+			}
+		});
 		pluginWeb.registerWebCommandHandler("start", (remoteSocketAddress, command, argument) -> {
 			try {
 				if (pluginProcess.isRunning()) {
 					PluginProcess.LOG.warn(() -> "Process is already running!");
 					return;
 				}
-				PluginWeb.LOG.info(() -> "Start process (" + remoteSocketAddress + ")");
 				up();
 			} catch (Exception e) {
 				throw new RuntimeException(e);
@@ -185,19 +186,10 @@ public abstract class ObjectductPwi2 extends Objectduct
 				PluginProcess.LOG.warn(() -> "No process is running!");
 				return;
 			}
-			PluginWeb.LOG.info(() -> "Stop process (" + remoteSocketAddress + ")");
 			pluginProcess.down();
 		});
-		pluginWeb.registerWebCommandHandler("auto_restart", (remoteSocketAddress, command, argument) -> {
-			if ("true".equals(argument)) {
-				PluginWeb.LOG.info(() -> "Set auto_restart (" + remoteSocketAddress + "): " + true);
-				autoRestarter.up();
-			} else if ("false".equals(argument)) {
-				PluginWeb.LOG.info(() -> "Set auto_restart (" + remoteSocketAddress + "): " + false);
-				autoRestarter.down();
-			} else {
-				PluginWeb.LOG.warn(() -> "Illegal argument: " + "auto_restart " + argument);
-			}
+		pluginWeb.registerWebCommandHandler("exit", (remoteSocketAddress, command, argument) -> {
+			new Thread(() -> System.exit(0)).start();
 		});
 
 		//
@@ -226,8 +218,17 @@ public abstract class ObjectductPwi2 extends Objectduct
 					}
 
 					return new Message(
-						new Source("SYSTEM(" + e.getLevel() + ")", color, "" + e.getThreadName()),
+						new Source(
+							"SYSTEM(" + e.getLevel() + ")",
+							color,
+							"" + e.getThreadName() + "/" + shorten(e.getLoggerName())),
 						e.getMessage().toString());
+				}
+
+				private String shorten(String loggerName)
+				{
+					int index = loggerName.lastIndexOf('.');
+					return index == -1 ? loggerName : loggerName.substring(index + 1);
 				}
 
 			})
@@ -235,7 +236,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 		hopperInput.getExportBus().addExporter(pluginProcess.getImporter()
 			.map(m -> m.text));
 		hopperInput.getExportBus().addExporter(hopperOutput.getImportBus().addImporter());
-		readerImporter.setExporter(hopperInput.getImportBus().addImporter()
+		daemonReaderHopper.setExporter(hopperInput.getImportBus().addImporter()
 			.map(t -> new Message(new Source("STDIN", "#0000ff", ""), t.y, t.x)));
 		pluginWeb.setExporter(hopperInput.getImportBus().addImporter());
 		pluginProcess.setExporter(hopperOutput.getImportBus().addImporter());
@@ -263,6 +264,18 @@ public abstract class ObjectductPwi2 extends Objectduct
 	{
 		sessionId = fileIncrementer.next();
 		pluginProcess.up();
+	}
+
+	private void exit()
+	{
+		LOG.info(() -> "Stopping...");
+		autoRestarter.down();
+		stop();
+		try {
+			join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

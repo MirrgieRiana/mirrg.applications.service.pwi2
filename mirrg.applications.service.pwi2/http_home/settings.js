@@ -10,6 +10,13 @@ $(function() {
 		send("start");
 	}));
 	$("#paneTools").append($('<button>').addClass("tool").text("Kill Process").click(function() {
-		send("stop");
+		if (confirm("Do you want to terminate the process?")) {
+			send("stop");
+		}
+	}));
+	$("#paneTools").append($('<button>').addClass("tool").text("Exit").click(function() {
+		if (confirm("Do you want to terminate the process manager?")) {
+			send("exit");
+		}
 	}));
 });

@@ -108,7 +108,8 @@ public class ProcessSession extends Objectduct
 
 	private void startReaderImporter(InputStream in, Terminal<Message> exporter, Source source) throws Exception
 	{
-		ReaderImporter readerImporterStdout = new ReaderImporter(new InputStreamReader(in), maxLength);
+		ReaderImporter readerImporterStdout = new ReaderImporter(new InputStreamReader(in));
+		readerImporterStdout.setMaxLength(maxLength);
 		readerImporterStdout.init();
 		readerImporterStdout.setExporter(new Terminal<Tuple<String, Position>>() {
 

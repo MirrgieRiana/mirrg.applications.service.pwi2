@@ -9,21 +9,36 @@ import mirrg.lithium.objectduct.TerminalClosedException;
 import mirrg.lithium.objectduct.inventories.ObjectductThreaded;
 import mirrg.lithium.struct.Tuple;
 
-public class ReaderImporter extends ObjectductThreaded<Tuple<String, Position>>
+public class ReaderImporter extends ObjectductThreaded
 {
 
 	private Reader in;
-	private int maxLength;
-
-	public ReaderImporter(Reader in, int maxLength)
-	{
-		this.in = in;
-		this.maxLength = maxLength;
-	}
+	private int maxLength = Integer.MAX_VALUE;
+	private boolean daemon = false;
 
 	public ReaderImporter(Reader in)
 	{
-		this(in, Integer.MAX_VALUE);
+		this.in = in;
+	}
+
+	public void setMaxLength(int maxLength)
+	{
+		this.maxLength = maxLength;
+	}
+
+	public void setDaemon(boolean daemon)
+	{
+		this.daemon = daemon;
+	}
+
+	//
+
+	@Override
+	protected Thread createThread()
+	{
+		Thread thread = super.createThread();
+		thread.setDaemon(daemon);
+		return thread;
 	}
 
 	//

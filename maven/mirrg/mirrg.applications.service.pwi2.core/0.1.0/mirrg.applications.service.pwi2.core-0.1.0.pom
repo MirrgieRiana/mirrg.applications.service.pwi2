@@ -32,6 +32,12 @@
     </dependency>
     <dependency>
       <groupId>mirrg.lithium</groupId>
+      <artifactId>mirrg.lithium.objectduct</artifactId>
+      <version>0.3+</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>mirrg.lithium</groupId>
       <artifactId>mirrg.lithium.struct</artifactId>
       <version>2.2+</version>
       <scope>compile</scope>
@@ -40,12 +46,6 @@
       <groupId>commons-logging</groupId>
       <artifactId>commons-logging</artifactId>
       <version>1.2</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>mirrg.lithium</groupId>
-      <artifactId>mirrg.lithium.objectduct</artifactId>
-      <version>0.1+</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
