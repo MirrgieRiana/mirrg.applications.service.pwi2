@@ -60,4 +60,11 @@ public class HttpServerPluginWeb extends Objectduct
 		PluginWeb.LOG.info(() -> "HTTP Server Start: http://" + plugin.getHostname() + ":" + plugin.getPortHttp());
 	}
 
+	@Override
+	public void stop()
+	{
+		super.stop();
+		server.stop(0);
+	}
+
 }

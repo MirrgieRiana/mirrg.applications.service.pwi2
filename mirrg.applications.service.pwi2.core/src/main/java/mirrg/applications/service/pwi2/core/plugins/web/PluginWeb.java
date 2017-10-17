@@ -1,6 +1,5 @@
 package mirrg.applications.service.pwi2.core.plugins.web;
 
-import java.io.IOException;
 import java.util.Hashtable;
 
 import org.apache.commons.logging.LogFactory;
@@ -98,10 +97,10 @@ public abstract class PluginWeb extends Objectduct
 
 	}
 
-	public void stop() throws IOException, InterruptedException
+	@Override
+	public void stop()
 	{
-		httpServer.server.stop(0);
-		webSocketServer.stop();
+		super.stop();
 		exporter.close();
 	}
 

@@ -89,10 +89,7 @@ public abstract class PluginProcess extends Objectduct
 	public void up() throws Exception
 	{
 		synchronized (lock) {
-			if (processSession != null) {
-				LOG.warn(() -> "Process is already running!");
-				return;
-			}
+			if (processSession != null) return;
 
 			LOG.info(() -> "Process Start: `" + String.join(" ", getCommand()) + "`");
 			LOG.info(() -> "Current Directory: '" + getCurrentDirectory() + "'");
@@ -124,12 +121,16 @@ public abstract class PluginProcess extends Objectduct
 	public void down()
 	{
 		synchronized (lock) {
-			if (processSession == null) {
-				LOG.warn(() -> "No process is running!");
-				return;
-			}
-			processSession.destroy();
+			if (processSession == null) return;
+			processSession.stop();
 		}
+	}
+
+	@Override
+	public void stop()
+	{
+		super.stop();
+		hopperOut.getImporter().close();
 	}
 
 }

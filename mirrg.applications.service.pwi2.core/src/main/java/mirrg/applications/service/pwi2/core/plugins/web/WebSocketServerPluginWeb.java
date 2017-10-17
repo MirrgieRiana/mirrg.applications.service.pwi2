@@ -147,9 +147,17 @@ public class WebSocketServerPluginWeb extends Objectduct
 		PluginWeb.LOG.info(() -> "WebSocket Server Start: http://" + plugin.getHostname() + ":" + plugin.getPortWebSocket());
 	}
 
-	public void stop() throws IOException, InterruptedException
+	@Override
+	public void stop()
 	{
-		server.stop();
+		super.stop();
+		try {
+			server.stop();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+
+		}
 	}
 
 }

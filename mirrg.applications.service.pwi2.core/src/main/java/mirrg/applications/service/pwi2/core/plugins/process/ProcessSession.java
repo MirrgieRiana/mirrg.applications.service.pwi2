@@ -128,8 +128,10 @@ public class ProcessSession extends Objectduct
 		readerImporterStdout.start();
 	}
 
-	public void destroy()
+	@Override
+	public void stop()
 	{
+		super.stop();
 		synchronized (lock) {
 			process.destroy();
 		}

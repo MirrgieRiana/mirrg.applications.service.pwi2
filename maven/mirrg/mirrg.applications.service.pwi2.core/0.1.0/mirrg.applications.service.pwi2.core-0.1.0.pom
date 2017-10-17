@@ -43,6 +43,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
+      <groupId>mirrg.lithium</groupId>
+      <artifactId>mirrg.lithium.objectduct</artifactId>
+      <version>0.1+</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.17</version>
@@ -52,12 +58,6 @@
       <groupId>mirrg.lithium</groupId>
       <artifactId>mirrg.lithium.cgi</artifactId>
       <version>3.0+</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>mirrg.lithium</groupId>
-      <artifactId>mirrg.lithium.objectduct</artifactId>
-      <version>0.0+</version>
       <scope>compile</scope>
     </dependency>
     <dependency>

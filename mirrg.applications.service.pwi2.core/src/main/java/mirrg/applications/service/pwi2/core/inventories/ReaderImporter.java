@@ -21,6 +21,11 @@ public class ReaderImporter extends ObjectductThreaded<Tuple<String, Position>>
 		this.maxLength = maxLength;
 	}
 
+	public ReaderImporter(Reader in)
+	{
+		this(in, Integer.MAX_VALUE);
+	}
+
 	//
 
 	private Terminal<Tuple<String, Position>> exporter;
