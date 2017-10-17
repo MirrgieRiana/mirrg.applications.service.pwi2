@@ -4,7 +4,7 @@ apply plugin: 'maven'
 
 project.group = 'mirrg'
 project.archivesBaseName = 'mirrg.applications.service.pwi2.core'
-version = '0.1.2'
+version = '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
