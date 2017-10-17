@@ -128,6 +128,14 @@ public abstract class PluginProcess extends Objectduct
 		}
 	}
 
+	public void waitFor() throws InterruptedException
+	{
+		synchronized (lock) {
+			if (processSession == null) return;
+			processSession.waitFor();
+		}
+	}
+
 	@Override
 	public void stop()
 	{

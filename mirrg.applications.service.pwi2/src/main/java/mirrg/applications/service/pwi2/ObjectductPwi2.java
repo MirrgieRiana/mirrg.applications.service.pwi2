@@ -53,7 +53,25 @@ public abstract class ObjectductPwi2 extends Objectduct
 			@Override
 			public void run()
 			{
-				exit();
+				LOG.info(() -> "Stopping...");
+
+				autoRestarter.down();
+
+				if (pluginProcess.isRunning()) {
+					pluginProcess.down();
+					try {
+						pluginProcess.waitFor();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+
+				stop();
+				try {
+					join();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 
 		}));
@@ -189,7 +207,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 			pluginProcess.down();
 		});
 		pluginWeb.registerWebCommandHandler("exit", (remoteSocketAddress, command, argument) -> {
-			new Thread(() -> System.exit(0)).start();
+			exit();
 		});
 
 		//
@@ -268,14 +286,7 @@ public abstract class ObjectductPwi2 extends Objectduct
 
 	private void exit()
 	{
-		LOG.info(() -> "Stopping...");
-		autoRestarter.down();
-		stop();
-		try {
-			join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		new Thread(() -> System.exit(0)).start();
 	}
 
 }

@@ -138,4 +138,13 @@ public class ProcessSession extends Objectduct
 		}
 	}
 
+	public void waitFor() throws InterruptedException
+	{
+		Process process2;
+		synchronized (lock) {
+			process2 = process;
+		}
+		process2.waitFor();
+	}
+
 }
