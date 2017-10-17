@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<link rel="shortcut icon" href="console.png">
 <style>
 html, body {
 	height: 100%;
@@ -281,7 +282,7 @@ button {
 		<tr style="height: 100%;">
 			<td>
 				<table class="layout">
-					<tr>
+					<tr style="height: 100%;">
 						<td style="width: 100%;"><iframe class="layout" id="iframeTable"></iframe></td>
 						<td id="paneTools" style="display: none; vertical-align: top;"><label class="tool"><input type="checkbox" id="checkboxReceiveMessage" checked>Receive Message</label> <label
 							class="tool"><input type="checkbox" id="checkboxAutoScroll" checked>Auto Scroll</label></td>
@@ -291,7 +292,7 @@ button {
 		</tr>
 		<tr>
 			<td><table class="layout">
-					<tr>
+					<tr style="height: 100%;">
 						<td><span style="vertical-align: bottom;"><input type="text" id="textName" style="width: 5em;" value="Guest"> <textarea id="textareaInput" style="width: 300px;"
 									onkeydown='
 							if (event.ctrlKey && event.keyCode == 13) {
@@ -316,7 +317,7 @@ button {
 		<tr>
 			<td>
 				<table class="layout">
-					<tr>
+					<tr style="height: 100%;">
 						<td id="status"></td>
 						<td style="text-align: right;"><span id="applicationName"></span> (Firefox55,GoogleChrome60)
 							<button style="margin: 1px;" onclick='
