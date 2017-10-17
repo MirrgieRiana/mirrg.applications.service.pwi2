@@ -1,4 +1,8 @@
 
+map {
+	print "Line\n";
+} 1..100;
+
 local $SIG{HUP} = sub {
 	print "HUP!";
 	sleep(5);

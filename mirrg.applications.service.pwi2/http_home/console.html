@@ -18,6 +18,10 @@ table.layout {
 	border-collapse: collapse;
 }
 
+table.layout>tbody>tr>td, table.layout>tr>td {
+	padding: 0;
+}
+
 iframe.layout {
 	min-height: 20px;
 	height: 100%;
@@ -40,6 +44,12 @@ textarea {
 button {
 	height: 1.5em;
 	box-sizing: border-box;
+}
+
+.tool {
+	display: block;
+	white-space: nowrap;
+	margin: 4px 2px;
 }
 </style>
 <script src="moment.js"></script>
@@ -73,7 +83,7 @@ button {
 
 		$iframeContent.find("#table").append($tr);
 	}
-	function addPWI2Message(data, scrollable) {
+	function addPwi2Message(data, scrollable) {
 		var $tr = $("<tr>");
 		var $td;
 
@@ -103,7 +113,7 @@ button {
 				$td.append("(");
 
 				$span = $("<span>");
-				$span.text(data.message.position);
+				$span.text("R" + data.message.position.row + "C" + data.message.position.column);
 				$span.addClass("source_position");
 				$td.append($span);
 
@@ -140,10 +150,13 @@ button {
 		$("#status").css("color", color);
 	}
 	function send(text) {
-		socket.send("Post " + JSON.stringify({
+		socket.send(text);
+	}
+	function post(text) {
+		send("POST " + JSON.stringify({
 			name : $("#textName").val(),
 			text : text,
-		}))
+		}));
 	}
 
 	$(function() {
@@ -223,7 +236,7 @@ button {
 											if ($("#checkboxReceiveMessage").is(':checked')) {
 
 												if (packet.startsWith("MessageAdded ")) {
-													addPWI2Message(JSON.parse(packet.substr(13)));
+													addPwi2Message(JSON.parse(packet.substr(13)));
 												} else if (packet.startsWith("MessageSkipped ")) {
 													setStatus("Skipped " + JSON.parse(packet.substr(15)) + " messages!!", "#ff0000");
 												}
@@ -261,28 +274,54 @@ button {
 
 	});
 </script>
+<script src="settings.js"></script>
 </head>
 <body>
 	<table class="layout">
 		<tr style="height: 100%;">
-			<td><iframe class="layout" id="iframeTable"></iframe></td>
+			<td>
+				<table class="layout">
+					<tr>
+						<td style="width: 100%;"><iframe class="layout" id="iframeTable"></iframe></td>
+						<td id="paneTools" style="display: none; vertical-align: top;"><label class="tool"><input type="checkbox" id="checkboxReceiveMessage" checked>Receive Message</label> <label
+							class="tool"><input type="checkbox" id="checkboxAutoScroll" checked>Auto Scroll</label></td>
+					</tr>
+				</table>
+			</td>
 		</tr>
 		<tr>
-			<td><span style="vertical-align: bottom;"><input type="text" id="textName" style="width: 5em;" value="Guest"> <textarea id="textareaInput" style="width: 300px;"></textarea>
-					<button onclick='
-						var text = $("#textareaInput").val();
-						if (text != "") {
-							send(text);
-						}
-					'>Send</button> <label><input type="checkbox"
-						id="checkboxReceiveMessage" checked>Receive Message</label><label><input type="checkbox" id="checkboxAutoScroll" checked>Auto Scroll</label></span></td>
+			<td><table class="layout">
+					<tr>
+						<td><span style="vertical-align: bottom;"><input type="text" id="textName" style="width: 5em;" value="Guest"> <textarea id="textareaInput" style="width: 300px;"
+									onkeydown='
+							if (event.ctrlKey && event.keyCode == 13) {
+								var text = $("#textareaInput").val();
+								if (text != "") {
+									post(text);
+								}
+								$("#textareaInput").val("");
+							}
+						'></textarea>
+								<button onclick='
+									var text = $("#textareaInput").val();
+									if (text != "") {
+										post(text);
+									}
+									$("#textareaInput").val("");
+								'>Post</button></span></td>
+						<td style="text-align: right;"><span style="vertical-align: bottom;"></span></td>
+					</tr>
+				</table></td>
 		</tr>
 		<tr>
 			<td>
 				<table class="layout">
 					<tr>
 						<td id="status"></td>
-						<td id="applicationName" style="text-align: right;">mirrg.applications.service.pwi2 for Firefox55,GoogleChrome60</td>
+						<td style="text-align: right;"><span id="applicationName"></span> (Firefox55,GoogleChrome60)
+							<button style="margin: 1px;" onclick='
+						$("#paneTools").toggle();
+					'>Tools</button></td>
 					</tr>
 				</table>
 			</td>

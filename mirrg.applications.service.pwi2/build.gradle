@@ -21,7 +21,7 @@ repositories {
 dependencies {
 	testCompile group: 'junit', name: 'junit', version: '4.+'
 	compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.12'
-	compile group: 'mirrg', name: 'mirrg.applications.service.pwi2.core', version: '0.0.1'
+	compile group: 'mirrg', name: 'mirrg.applications.service.pwi2.core', version: '0.1.0'
 }
 
 task wrapper(type: Wrapper) {
@@ -31,4 +31,5 @@ task wrapper(type: Wrapper) {
 task runTest1(type: JavaExec) {
     main = 'Test1'
     classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
 }
